@@ -1,0 +1,53 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # możliwość ręcznego uruchomienia z zakładki Actions
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Zainstaluj zależności
+        run: npm ci
+
+      - name: Zbuduj aplikację
+        run: npm run build
+        env:
+          # Jeśli secret VITE_TMDB_API_KEY jest ustawiony w repozytorium →
+          # build używa prawdziwego API TMDB.
+          # Jeśli secret nie istnieje → zmienna jest pusta →
+          # aplikacja automatycznie włączy MSW z mockami.
+          VITE_TMDB_API_KEY: ${{ secrets.VITE_TMDB_API_KEY }}
+          VITE_TMDB_BASE_URL: https://api.themoviedb.org/3
+
+      - uses: actions/configure-pages@v4
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Wdróż na GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
