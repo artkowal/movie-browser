@@ -30,7 +30,7 @@ jobs:
           cache: npm
 
       - name: Zainstaluj zależności
-        run: npm ci
+        run: npm install
 
       - name: Zbuduj aplikację
         run: npm run build
