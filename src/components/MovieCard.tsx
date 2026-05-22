@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useFavourites } from '../hooks/useFavourites';
+import { useToast } from '../context/ToastContext';
 import type { Movie } from '../hooks/useFetchMovies';
 
 const IMG_BASE = 'https://image.tmdb.org/t/p/w500';
@@ -11,6 +12,7 @@ interface Props {
 
 export function MovieCard({ movie, onClick }: Props) {
   const { isFavourite, toggleFavourite } = useFavourites();
+  const { addToast } = useToast();
   const [optimisticFav, setOptimisticFav] = useState<boolean | null>(null);
 
   const displayedFav = optimisticFav ?? isFavourite(movie.id);
@@ -18,11 +20,13 @@ export function MovieCard({ movie, onClick }: Props) {
   const handleToggle = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      setOptimisticFav(!displayedFav);
+      const adding = !displayedFav;
+      setOptimisticFav(adding);
       toggleFavourite(movie);
+      addToast(adding ? `❤️ Dodano: ${movie.title}` : `🗑️ Usunięto: ${movie.title}`);
       setOptimisticFav(null);
     },
-    [displayedFav, toggleFavourite, movie]
+    [displayedFav, toggleFavourite, addToast, movie]
   );
 
   return (

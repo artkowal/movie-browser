@@ -6,6 +6,7 @@ import { MovieCard } from './components/MovieCard';
 import { MovieModal } from './components/MovieModal';
 import { EmptyState } from './components/EmptyState';
 import { InfiniteMovieList } from './components/InfiniteMovieList';
+import { ToastContainer } from './components/ToastContainer';
 import { useDebounce } from './hooks/useDebounce';
 import { useFavourites } from './hooks/useFavourites';
 import type { Movie } from './hooks/useFetchMovies';
@@ -167,6 +168,7 @@ function App() {
           onClose={() => setSelectedMovieId(null)}
         />
       )}
+      <ToastContainer />
     </div>
   );
 }
