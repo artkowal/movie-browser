@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useInfiniteMovies } from '../hooks/useInfiniteMovies';
 import type { Movie } from '../hooks/useFetchMovies';
 import { MovieCard } from './MovieCard';
@@ -17,10 +17,6 @@ const GRID_VARIANTS = {
   visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
 };
 
-const CARD_VARIANTS = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
-};
 
 export function InfiniteMovieList({ query, onMovieClick }: Props) {
   const {
@@ -33,6 +29,12 @@ export function InfiniteMovieList({ query, onMovieClick }: Props) {
     error,
     refetch,
   } = useInfiniteMovies(query);
+
+  const shouldReduce = useReducedMotion();
+  const CARD_VARIANTS_ACTIVE = {
+    hidden: { opacity: 0, y: shouldReduce ? 0 : 20 },
+    visible: { opacity: 1, y: 0 },
+  };
 
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -76,7 +78,7 @@ export function InfiniteMovieList({ query, onMovieClick }: Props) {
           animate="visible"
       >
         {movies.map((movie) => (
-            <motion.div key={movie.id} variants={CARD_VARIANTS}>
+            <motion.div key={movie.id} variants={CARD_VARIANTS_ACTIVE}>
               <MovieCard movie={movie} onClick={() => onMovieClick(movie.id)} />
             </motion.div>
         ))}
