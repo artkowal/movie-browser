@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { useInfiniteMovies } from '../hooks/useInfiniteMovies';
+import type { Movie } from '../hooks/useFetchMovies';
 import { MovieCard } from './MovieCard';
 import { SkeletonCard } from './SkeletonCard';
 import { ErrorBanner } from './ErrorBanner';
@@ -9,6 +11,16 @@ interface Props {
   query: string;
   onMovieClick: (id: number) => void;
 }
+
+const GRID_VARIANTS = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
+};
+
+const CARD_VARIANTS = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+};
 
 export function InfiniteMovieList({ query, onMovieClick }: Props) {
   const {
@@ -51,19 +63,26 @@ export function InfiniteMovieList({ query, onMovieClick }: Props) {
     );
   }
 
-  const movies = data?.pages.flatMap((p) => p.results) ?? [];
+  const movies: Movie[] = data?.pages.flatMap((p) => p.results) ?? [];
 
   if (movies.length === 0) return <EmptyState />;
 
   return (
     <>
-      <div className="movie-grid">
+      <motion.div
+          className="movie-grid"
+          variants={GRID_VARIANTS}
+          initial="hidden"
+          animate="visible"
+      >
         {movies.map((movie) => (
-          <MovieCard key={movie.id} movie={movie} onClick={() => onMovieClick(movie.id)} />
+            <motion.div key={movie.id} variants={CARD_VARIANTS}>
+              <MovieCard movie={movie} onClick={() => onMovieClick(movie.id)} />
+            </motion.div>
         ))}
         {isFetchingNextPage &&
-          Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={`sk-${i}`} />)}
-      </div>
+            Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={`sk-${i}`} />)}
+      </motion.div>
 
       {/* Element obserwowany przez IntersectionObserver */}
       <div ref={sentinelRef} style={{ height: 1 }} />

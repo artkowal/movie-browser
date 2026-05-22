@@ -15,6 +15,7 @@ interface FavCtx {
   favourites: Movie[];
   toggleFavourite: (movie: Movie) => void;
   isFavourite: (id: number) => boolean;
+  reorderFavourites: (movies: Movie[]) => void;
 }
 
 const FavouritesContext = createContext<FavCtx | null>(null);
@@ -37,8 +38,13 @@ export function FavouritesProvider({ children }: { children: ReactNode }) {
     [favourites]
   );
 
+  const reorderFavourites = useCallback((movies: Movie[]) => {
+    setFavourites(movies);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(movies));
+  }, []);
+
   return (
-    <FavouritesContext.Provider value={{ favourites, toggleFavourite, isFavourite }}>
+    <FavouritesContext.Provider value={{ favourites, toggleFavourite, isFavourite, reorderFavourites }}>
       {children}
     </FavouritesContext.Provider>
   );

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AnimatePresence, motion, type Variants } from 'framer-motion';
+import { AnimatePresence, motion, Reorder, useDragControls, type Variants } from 'framer-motion';
 import { useQueryClient } from '@tanstack/react-query';
 import { CharactersList } from './components/CharactersList';
 import { MovieCard } from './components/MovieCard';
@@ -8,8 +8,35 @@ import { EmptyState } from './components/EmptyState';
 import { InfiniteMovieList } from './components/InfiniteMovieList';
 import { useDebounce } from './hooks/useDebounce';
 import { useFavourites } from './hooks/useFavourites';
+import type { Movie } from './hooks/useFetchMovies';
 
 type Tab = 'movies' | 'favourites' | 'characters';
+
+interface FavouriteItemProps {
+  movie: Movie;
+  onCardClick: () => void;
+}
+
+function FavouriteItem({ movie, onCardClick }: FavouriteItemProps) {
+  const dragControls = useDragControls();
+  return (
+    <Reorder.Item
+      value={movie}
+      dragControls={dragControls}
+      dragListener={false}
+      className="fav-item"
+    >
+      <span
+        className="fav-drag-handle"
+        onPointerDown={(e) => dragControls.start(e)}
+        title="Przeciągnij aby zmienić kolejność"
+      >
+        ≡
+      </span>
+      <MovieCard movie={movie} onClick={onCardClick} />
+    </Reorder.Item>
+  );
+}
 
 const PAGE_VARIANTS: Variants = {
   initial: { opacity: 0, x: -16 },
@@ -25,7 +52,7 @@ function App() {
 
   const queryClient = useQueryClient();
   const debouncedQuery = useDebounce(query, 300);
-  const { favourites } = useFavourites();
+  const { favourites, reorderFavourites } = useFavourites();
 
   const toggle401 = async () => {
     const { worker } = await import('./mocks/browser');
@@ -111,15 +138,21 @@ function App() {
               {favourites.length === 0 ? (
                 <EmptyState />
               ) : (
-                <div className="movie-grid">
+                <Reorder.Group
+                  as="div"
+                  axis="y"
+                  values={favourites}
+                  onReorder={reorderFavourites}
+                  className="fav-list"
+                >
                   {favourites.map((movie) => (
-                    <MovieCard
+                    <FavouriteItem
                       key={movie.id}
                       movie={movie}
-                      onClick={() => setSelectedMovieId(movie.id)}
+                      onCardClick={() => setSelectedMovieId(movie.id)}
                     />
                   ))}
-                </div>
+                </Reorder.Group>
               )}
             </div>
           )}

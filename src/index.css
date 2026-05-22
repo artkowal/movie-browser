@@ -593,3 +593,47 @@ code {
 .error-toggle:has(input:checked) .toggle-label {
   color: #dc2626;
 }
+
+.fav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  align-items: flex-start;
+}
+
+.fav-item {
+  position: relative;
+  list-style: none;
+  width: 155px;
+}
+
+.fav-drag-handle {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
+  line-height: 1;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  transition: transform 0.15s;
+}
+
+.fav-drag-handle:hover {
+  transform: scale(1.2);
+}
+
+.fav-drag-handle:active {
+  cursor: grabbing;
+}
