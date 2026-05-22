@@ -26,7 +26,7 @@ export function MovieCard({ movie, onClick }: Props) {
   );
 
   return (
-    <div className="movie-card" onClick={onClick}>
+    <div className="movie-card" onClick={onClick} tabIndex={0} role="button">
       {movie.poster_path ? (
         <img
           src={`${IMG_BASE}${movie.poster_path}`}

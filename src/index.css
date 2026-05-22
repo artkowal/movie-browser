@@ -158,6 +158,10 @@ code {
   color: #fff;
   border-color: var(--accent);
 }
+.tab-btn:focus-visible {
+  outline: 2px solid #0043ff;
+  outline-offset: 2px;
+}
 
 .search-bar { margin-bottom: 24px; }
 
@@ -195,13 +199,19 @@ code {
   overflow: hidden;
   background: var(--bg);
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  will-change: transform;
   position: relative;
 }
 
 .movie-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow);
+  transform: scale(1.03) translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 67, 255, 0.15);
+}
+
+.movie-card:focus-visible {
+  outline: 2px solid #0043ff;
+  outline-offset: 2px;
 }
 
 .movie-card img {
