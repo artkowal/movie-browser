@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import { useQueryClient } from '@tanstack/react-query';
 import { CharactersList } from './components/CharactersList';
 import { MovieCard } from './components/MovieCard';
@@ -9,6 +10,12 @@ import { useDebounce } from './hooks/useDebounce';
 import { useFavourites } from './hooks/useFavourites';
 
 type Tab = 'movies' | 'favourites' | 'characters';
+
+const PAGE_VARIANTS: Variants = {
+  initial: { opacity: 0, x: -16 },
+  animate: { opacity: 1, x: 0, transition: { duration: 0.28, ease: 'easeOut' } },
+  exit:    { opacity: 0, x: 16,  transition: { duration: 0.18, ease: 'easeIn' } },
+};
 
 function App() {
   const [tab, setTab] = useState<Tab>('movies');
@@ -73,43 +80,53 @@ function App() {
         )}
       </header>
 
-      {tab === 'movies' && (
-        <div className="movie-browser">
-          <div className="search-bar">
-            <input
-              type="search"
-              placeholder="Szukaj filmów... (min. 2 znaki)"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="search-input"
-            />
-          </div>
-          <InfiniteMovieList
-            query={debouncedQuery}
-            onMovieClick={(id) => setSelectedMovieId(id)}
-          />
-        </div>
-      )}
-
-      {tab === 'favourites' && (
-        <div className="movie-browser">
-          {favourites.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <div className="movie-grid">
-              {favourites.map((movie) => (
-                <MovieCard
-                  key={movie.id}
-                  movie={movie}
-                  onClick={() => setSelectedMovieId(movie.id)}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={tab}
+          variants={PAGE_VARIANTS}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+        >
+          {tab === 'movies' && (
+            <div className="movie-browser">
+              <div className="search-bar">
+                <input
+                  type="search"
+                  placeholder="Szukaj filmów... (min. 2 znaki)"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="search-input"
                 />
-              ))}
+              </div>
+              <InfiniteMovieList
+                query={debouncedQuery}
+                onMovieClick={(id) => setSelectedMovieId(id)}
+              />
             </div>
           )}
-        </div>
-      )}
 
-      {tab === 'characters' && <CharactersList />}
+          {tab === 'favourites' && (
+            <div className="movie-browser">
+              {favourites.length === 0 ? (
+                <EmptyState />
+              ) : (
+                <div className="movie-grid">
+                  {favourites.map((movie) => (
+                    <MovieCard
+                      key={movie.id}
+                      movie={movie}
+                      onClick={() => setSelectedMovieId(movie.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {tab === 'characters' && <CharactersList />}
+        </motion.div>
+      </AnimatePresence>
 
       {selectedMovieId !== null && (
         <MovieModal
