@@ -410,6 +410,19 @@ export function useCharacters(page = 1, name = '') {
 
 ---
 
+## 📊 Analiza zachowań użytkowników
+
+Folder [`session-analysis/`](session-analysis/) zawiera narzędzie do analizy danych sesji użytkowników. Na podstawie pliku CSV (712 zanonimizowanych rekordów) oblicza bounce rate per strona, drop-off w ścieżce formularza oraz ranking najczęściej klikanych elementów interfejsu.
+
+```bash
+npx serve session-analysis
+# → http://localhost:3000
+```
+
+Szczegóły w [`session-analysis/README.md`](session-analysis/README.md).
+
+---
+
 ## 🛠 Technologie
 
 | Technologia | Wersja | Zastosowanie |

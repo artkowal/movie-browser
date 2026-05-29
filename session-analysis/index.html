@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Session Analysis</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { margin-bottom: 0.25rem; }
+    p  { color: #666; margin-bottom: 2rem; }
+    h2 { margin: 2rem 0 0.75rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.4rem; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th { text-align: left; padding: 0.5rem 0.75rem; background: #f9fafb; border-bottom: 2px solid #e5e7eb; }
+    td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f3f4f6; }
+
+    .note { margin-top: 0.75rem; font-size: 0.85rem; color: #6b7280; }
+    #error { color: #dc2626; padding: 1rem; border: 1px solid #fca5a5; border-radius: 6px; display: none; }
+  </style>
+</head>
+<body>
+
+<h1>Session Analysis</h1>
+<p>712 sesji · 30 dni · sessions_lab12.csv</p>
+
+<div id="error"></div>
+<div id="app"></div>
+
+<script type="module">
+  async function loadCSV(path) {
+    const text = await fetch(path).then(r => r.text());
+    return Papa.parse(text, { header: true, dynamicTyping: true, skipEmptyLines: true }).data;
+  }
+
+  function bounceRateByPage(data) {
+    const stats = {};
+    for (const row of data) {
+      if (!stats[row.page]) stats[row.page] = { total: 0, bounced: 0 };
+      stats[row.page].total++;
+      if (row.bounce === true || row.bounce === 'true') stats[row.page].bounced++;
+    }
+    return Object.entries(stats)
+      .map(([page, s]) => ({ page, total: s.total, bounced: s.bounced, rate: (s.bounced / s.total * 100).toFixed(1) + '%' }))
+      .sort((a, b) => parseFloat(b.rate) - parseFloat(a.rate));
+  }
+
+  function formDropOff(data) {
+    const rows = data.filter(r => r.page === 'form' && r.form_step_reached);
+    const total = rows.length;
+    return [1, 2, 3, 4].map(step => {
+      const reached = rows.filter(r => Number(r.form_step_reached) >= step).length;
+      return { krok: step, sesje: reached, procent: (reached / total * 100).toFixed(1) + '%' };
+    });
+  }
+
+  function topClicks(data, n = 5) {
+    const freq = {};
+    for (const row of data) {
+      if (row.element_clicked) freq[row.element_clicked] = (freq[row.element_clicked] || 0) + 1;
+    }
+    return Object.entries(freq)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, n)
+      .map(([element, count]) => ({ element, count }));
+  }
+
+  function table(data) {
+    const headers = Object.keys(data[0]);
+    const ths = headers.map(h => `<th>${h}</th>`).join('');
+    const trs = data.map(row =>
+      `<tr>${headers.map(h => `<td>${row[h]}</td>`).join('')}</tr>`
+    ).join('');
+    return `<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+  }
+
+  try {
+    const data = await loadCSV('sessions_lab12.csv');
+    const bounce = bounceRateByPage(data);
+    const drop   = formDropOff(data);
+    const clicks = topClicks(data);
+
+    document.getElementById('app').innerHTML = `
+      <h2>Bounce rate per strona</h2>
+      ${table(bounce)}
+      <p class="note">Najwyższy bounce rate: <strong>${bounce[0].page}</strong> (${bounce[0].rate})</p>
+
+      <h2>Drop-off formularza</h2>
+      ${table(drop)}
+      <p class="note">Największy odpływ między krokami 2 → 3.</p>
+
+      <h2>Top 5 klikanych elementów</h2>
+      ${table(clicks)}
+    `;
+
+    console.table(bounce);
+    console.table(drop);
+    console.table(clicks);
+  } catch (err) {
+    const el = document.getElementById('error');
+    el.style.display = 'block';
+    el.textContent = `Błąd: ${err.message} — uruchom przez serwer HTTP, nie file://.`;
+  }
+</script>
+</body>
+</html>
