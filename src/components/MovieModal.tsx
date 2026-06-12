@@ -1,6 +1,7 @@
 import { useMovieDetails } from '../hooks/useMovieDetails';
 import { useFavourites } from '../hooks/useFavourites';
 import type { Movie } from '../hooks/useFetchMovies';
+import { trackEvent } from '../analytics';
 
 const IMG_BASE = 'https://image.tmdb.org/t/p/w500';
 
@@ -19,6 +20,10 @@ export function MovieModal({ movieId, onClose }: Props) {
 
   const handleFavToggle = () => {
     if (!data) return;
+    // Śledzimy wyłącznie dodanie do ulubionych (konwersja), nie usunięcie
+    if (!isFavourite(data.id)) {
+      trackEvent('Favourite Added', { movie_id: String(data.id) });
+    }
     const movie: Movie = {
       id: data.id,
       title: data.title,

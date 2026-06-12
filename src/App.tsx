@@ -10,6 +10,7 @@ import { ToastContainer } from './components/ToastContainer';
 import { useDebounce } from './hooks/useDebounce';
 import { useFavourites } from './hooks/useFavourites';
 import type { Movie } from './hooks/useFetchMovies';
+import { trackEvent, trackPageview } from './analytics';
 
 type Tab = 'movies' | 'favourites' | 'characters';
 
@@ -55,6 +56,23 @@ function App() {
   const debouncedQuery = useDebounce(query, 300);
   const { favourites, reorderFavourites } = useFavourites();
 
+  // Zmiana zakładki = pageview + wykrywanie porzucenia wyszukiwania
+  const handleTabChange = (newTab: Tab) => {
+    // RODO: śledzimy fakt porzucenia wyszukiwania, nie jego treść (zasada minimalizacji danych)
+    if (query.trim() && newTab !== 'movies') {
+      trackEvent('Search Abandoned');
+    }
+    // Ręczny pageview — app używa tab-based navigation zamiast React Router
+    trackPageview('/' + newTab);
+    setTab(newTab);
+  };
+
+  // RODO: movie_id to publiczne ID z API TMDB — nie jest danymi osobowymi
+  const handleMovieOpen = (id: number) => {
+    trackEvent('Movie CTA Click', { movie_id: String(id) });
+    setSelectedMovieId(id);
+  };
+
   const toggle401 = async () => {
     const { worker } = await import('./mocks/browser');
     if (!errorMode) {
@@ -82,19 +100,19 @@ function App() {
         <nav className="tabs">
           <button
             className={`tab-btn ${tab === 'movies' ? 'active' : ''}`}
-            onClick={() => setTab('movies')}
+            onClick={() => handleTabChange('movies')}
           >
             Filmy
           </button>
           <button
             className={`tab-btn ${tab === 'favourites' ? 'active' : ''}`}
-            onClick={() => setTab('favourites')}
+            onClick={() => handleTabChange('favourites')}
           >
             Ulubione ({favourites.length})
           </button>
           <button
             className={`tab-btn ${tab === 'characters' ? 'active' : ''}`}
-            onClick={() => setTab('characters')}
+            onClick={() => handleTabChange('characters')}
           >
             Rick &amp; Morty
           </button>
@@ -129,7 +147,7 @@ function App() {
               </div>
               <InfiniteMovieList
                 query={debouncedQuery}
-                onMovieClick={(id) => setSelectedMovieId(id)}
+                onMovieClick={handleMovieOpen}
               />
             </div>
           )}
@@ -150,7 +168,7 @@ function App() {
                     <FavouriteItem
                       key={movie.id}
                       movie={movie}
-                      onCardClick={() => setSelectedMovieId(movie.id)}
+                      onCardClick={() => handleMovieOpen(movie.id)}
                     />
                   ))}
                 </Reorder.Group>
