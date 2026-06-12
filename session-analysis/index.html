@@ -16,6 +16,13 @@
 
     .note { margin-top: 0.75rem; font-size: 0.85rem; color: #6b7280; }
     #error { color: #dc2626; padding: 1rem; border: 1px solid #fca5a5; border-radius: 6px; display: none; }
+
+    .bar-chart { margin: 1rem 0; display: flex; flex-direction: column; gap: 0.5rem; }
+    .bar-row { display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem; }
+    .bar-label { width: 60px; text-align: right; color: #374151; flex-shrink: 0; }
+    .bar-track { flex: 1; background: #f3f4f6; border-radius: 4px; height: 28px; }
+    .bar-fill { height: 100%; background: #6366f1; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; color: #fff; font-size: 0.8rem; font-weight: 600; transition: width 0.4s ease; }
+    .bar-fill.highlight { background: #ef4444; }
   </style>
 </head>
 <body>
@@ -64,6 +71,26 @@
       .map(([element, count]) => ({ element, count }));
   }
 
+  function barChart(data, labelKey, valueKey) {
+    const maxVal = Math.max(...data.map(r => parseFloat(r[valueKey])));
+    const rows = data.map((r, i) => {
+      const pct = parseFloat(r[valueKey]);
+      const width = (pct / maxVal * 100).toFixed(1);
+      const drop = i > 0 ? (parseFloat(data[i - 1][valueKey]) - pct).toFixed(1) : null;
+      const isLargestDrop = drop !== null && parseFloat(drop) === Math.max(
+        ...data.slice(1).map((r2, j) => parseFloat(data[j][valueKey]) - parseFloat(r2[valueKey]))
+      );
+      return `<div class="bar-row">
+        <span class="bar-label">${r[labelKey]}</span>
+        <div class="bar-track">
+          <div class="bar-fill${isLargestDrop ? ' highlight' : ''}" style="width:${width}%">${pct}%</div>
+        </div>
+        ${drop !== null ? `<span style="font-size:0.8rem;color:${isLargestDrop ? '#ef4444' : '#9ca3af'};width:60px">−${drop} pp</span>` : '<span style="width:60px"></span>'}
+      </div>`;
+    }).join('');
+    return `<div class="bar-chart">${rows}</div>`;
+  }
+
   function table(data) {
     const headers = Object.keys(data[0]);
     const ths = headers.map(h => `<th>${h}</th>`).join('');
@@ -85,8 +112,9 @@
       <p class="note">Najwyższy bounce rate: <strong>${bounce[0].page}</strong> (${bounce[0].rate})</p>
 
       <h2>Drop-off formularza</h2>
+      ${barChart(drop, 'krok', 'procent')}
       ${table(drop)}
-      <p class="note">Największy odpływ między krokami 2 → 3.</p>
+      <p class="note">Największy odpływ między krokami 1 → 2 (−34,1 pp). Krok 4 ukończony przez tylko 20% użytkowników.</p>
 
       <h2>Top 5 klikanych elementów</h2>
       ${table(clicks)}
